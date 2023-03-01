@@ -1,10 +1,10 @@
 ## Sound Analyzer
 
-When I was working on a Machine Learning sketch on ESP32 to detect sounds I found that there is suprisingly little easy-to-use ESP software for analyzing signals. I needed decibel measurement, FFT, MFCC and Shazam-style fingerprints. So I needed fast FFT and an analyzer class , suitable or embedded applications: i.e. robust, no dependencies on std:: and dynamic memory only at class creation / initialization. 
-I earlier found a very fast FFT in C and adapted / wrapped it to [ESPFFT](https://github.com/MichielFromNL/ESPFFT).
-Then I found  [Adam Starks GIST library](https://github.com/adamstark/Gist), and several Java snippets for making Shazam fingerprints.
+When I was working on a Machine Learning sketch on ESP32 to detect sounds I found that there is suprisingly little easy-to-use ESP software for analyzing signals. I needed decibel SPL measurement, FFT, MFCC and Shazam-style fingerprints. So I also needed an accurate mvolts AC sampler, a fast FFT and an analyzer class, all suitable or embedded applications: i.e. robust, no dependencies on std:: and dynamic memory only at class creation / initialization. 
+I earlier found a very fast FFT in C and adapted / wrapped it to [ESPFFT](https://github.com/MichielFromNL/ESPFFT). And I creaated a sampler class wrapper around Audiotools streams.
+Then I found  [Adam Starks GIST library](https://github.com/adamstark/Gist), and several Java snippets for making Shazam fingerprints for analysis
 
-SoundAnalyzer combines all of this in a single class with just a few methods, and the requested characteristics as output
+SoundAnalyzer combines FFT and features in a single class with just a few methods, and the requested characteristics as output
 
 To collect signals, you can use my easy-to-use [ESP32Sampler](https://github.com/MichielFromNL/ESP32Sampler) wrapper  
 Which gets a bunch of 16-bits ADC values in pretty accurate millivolts, with no CPU overhead at all. 
