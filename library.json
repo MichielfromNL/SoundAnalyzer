@@ -1,0 +1,24 @@
+{
+  "name": "SoundAnalyzer",
+  "keywords": "ESP, Arduino, SignalAnalyzer, FFT, Spectrumfeatures, DbSPL, MFCC, Shazam, Yin",
+  "description": "Class with fast processing to analyse signals and spectra, for Audio feature collection for ML applications", 
+  "homepage": "https://github.com/MichielFromNL",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MichielFromNL/SoundAnalyzer.git"
+  },
+  "version": "1.0.0",
+  "authors": {
+    "name": "Michiel Steltman",
+    "url": "https://www.disway.nl"
+  },
+  "exclude": [
+    ".github",
+    "extras"
+  ],
+  "frameworks": "*",
+  "platforms": "*",
+  "build": {
+    "libArchive": false
+  }
+}
