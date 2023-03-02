@@ -1,7 +1,9 @@
 ## Sound Analyzer
 
 When I was working on a Machine Learning sketch on ESP32 to detect sounds I found that there is suprisingly little easy-to-use Arduino/ESP software for analyzing signals. I needed accurate decibel-SPL measurement, FFT, MFCC's and spectrum features such as crest, rolloff, kurtosis etc, plus Shazam-style fingerprints. The dBSPL requires accurate mvolts AC sampling, the other features require fast  FFT and a spectrum analyzer. All of these must be suitable for embedded applications: i.e. robust, little or no dependencies on non-Arduino s/w , Arduino-style c++, and no dynamic memory other than for class constructors / initialization.
-For collecting AC signals you can use my easy-to-use [ESP32Sampler](https://github.com/MichielFromNL/ESP32Sampler) class, a wrapper around Audiotools streams. which gets a bunch of 16-bits ADC values in pretty accurate millivolts with 0 CPU. Then I found a very fast FFT in C and adapted / wrapped it to [ESPFFT](https://github.com/MichielFromNL/ESPFFT). 
+
+For collecting AC signals I created [ESP32Sampler](https://github.com/MichielFromNL/ESP32Sampler) class, a wrapper around Audiotools streams. which gets a bunch of 16-bits ADC values in pretty accurate millivolts with 0 CPU. Then I found a very fast FFT in C and adapted / wrapped it to [ESPFFT](https://github.com/MichielFromNL/ESPFFT). 
+
 For the next stage I found  [Adam Starks GIST library](https://github.com/adamstark/Gist), and some Java snippets for making Shazam fingerprints for analysis. SoundAnalyzer wraps and optimizes those in a single Arduino class. With just a few methods the requested characteristics: MFCC, Shazam , Yin , FFT and other features are returned as simple static output arrays.
 
 With thee three classes making a ML siund analyzer is now a breeze:
