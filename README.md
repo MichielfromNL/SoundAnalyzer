@@ -6,11 +6,11 @@ For collecting AC signals I created [ESP32Sampler](https://github.com/MichielFro
 
 For the next stage I found  [Adam Starks GIST library](https://github.com/adamstark/Gist), and some Java snippets for making Shazam fingerprints for analysis. SoundAnalyzer wraps and optimizes those in a single Arduino class. With just a few methods the requested characteristics: MFCC, Shazam , Yin , FFT and other features are returned as simple static output arrays.
 
-With thee three classes making a ML siund analyzer is now a breeze:
+With these three classes making a ML sound analyzer is now pretty straightforward:
 1. Get Samples using ESP32Sampler
 2. Process the signal using SoundAnalyzer
 3. Put relevant features: MFFC, Fingerprints, Yin or spectrum features in an array
-4. Call a Classifier.predict(array) function, to get a match on the signal
+4. Call a Classifier.predict(array) function (from eloquentML) , to get a match on the signal
 
 Extra note:  With sound processing and ML, sampling, an important thing is to use RTOS, so that you can  put a sampler task on a separate core. 
 Believe me: RTOS is awesome, and very much needed in systems that process lots of data. 
