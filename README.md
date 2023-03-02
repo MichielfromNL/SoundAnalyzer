@@ -1,22 +1,14 @@
 ## Sound Analyzer
 
-When I was working on a Machine Learning sketch on ESP32 to detect sounds I found that there is suprisingly little easy-to-use ESP software for analyzing signals. I needed decibel SPL measurement, FFT, MFCC and Shazam-style fingerprints. So I also needed an accurate mvolts AC sampler, a fast FFT and an analyzer class, all suitable or embedded applications: i.e. robust, no dependencies on std:: and dynamic memory only at class creation / initialization. 
-I earlier found a very fast FFT in C and adapted / wrapped it to [ESPFFT](https://github.com/MichielFromNL/ESPFFT). And I creaated a sampler class wrapper around Audiotools streams.
-Then I found  [Adam Starks GIST library](https://github.com/adamstark/Gist), and several Java snippets for making Shazam fingerprints for analysis
+When I was working on a Machine Learning sketch on ESP32 to detect sounds I found that there is suprisingly little easy-to-use Arduino/ESP software for analyzing signals. I needed accurate decibel-SPL measurement, FFT, MFCC's and spectrum features such as crest, rolloff, kurtosis etc, plus Shazam-style fingerprints. The dBSPL requires accurate mvolts AC sampling, the other features require fast  FFT and a spectrum analyzer. All of these must be suitable for embedded applications: i.e. robust, little or no dependencies on non-Arduino s/w , Arduino-style c++, and no dynamic memory other than for class constructors / initialization.
+For collecting AC signals you can use my easy-to-use [ESP32Sampler](https://github.com/MichielFromNL/ESP32Sampler) class, a wrapper around Audiotools streams. which gets a bunch of 16-bits ADC values in pretty accurate millivolts with 0 CPU. Then I found a very fast FFT in C and adapted / wrapped it to [ESPFFT](https://github.com/MichielFromNL/ESPFFT). 
+For the next stage I found  [Adam Starks GIST library](https://github.com/adamstark/Gist), and some Java snippets for making Shazam fingerprints for analysis. SoundAnalyzer wraps and optimizes those in a single Arduino class. With just a few methods the requested characteristics: MFCC, Shazam , Yin , FFT and other features are returned as simple static output arrays.
 
-SoundAnalyzer combines FFT and features in a single class with just a few methods, and the requested characteristics as output
-
-To collect signals, you can use my easy-to-use [ESP32Sampler](https://github.com/MichielFromNL/ESP32Sampler) wrapper  
-Which gets a bunch of 16-bits ADC values in pretty accurate millivolts, with no CPU overhead at all. 
-
-Typical approach for Sound ML:
+With thee three classes making a ML siund analyzer is now a breeze:
 1. Get Samples using ESP32Sampler
 2. Process the signal using SoundAnalyzer
-3. Make an array with the relevant features form the previous step
-4. call a Classifier.predict(array) function, to get a match on the signal
-
-This class makes step 2 very easy. 
-But to find the right features for your project is another story, I'll cover that in an other topic on ML modelling
+3. Put relevant features: MFFC, Fingerprints, Yin or spectrum features in an array
+4. Call a Classifier.predict(array) function, to get a match on the signal
 
 Extra note:  With sound processing and ML, sampling, an important thing is to use RTOS, so that you can  put a sampler task on a separate core. 
 Believe me: RTOS is awesome, and very much needed in systems that process lots of data. 
@@ -26,33 +18,30 @@ Believe me: RTOS is awesome, and very much needed in systems that process lots o
 - Platformio:  use the Library manager, or simply add https://github.com/MichielfromNL/SoundAnalyzer.git to lib_deps in your project's platformio.ini file
 - Arduino IDE:  [get the ZIP](https://github.com/MichielfromNL/ESP32Sampler/archive/refs/heads/main.zip) , extract the contents in a folder in the libraries folder of your Arduino environment
  
- ## Details
+## Details
 
- The class has 2 sets of procedures: 3 in the time domain (Pitch , rms and dbSPL), and in the frequency domain : MFCC, Signatures and spectrum features.
- for time domain features, you have to pass the signal. 
+The class has 2 sets of procedures: 3 for the time domain (Pitch , Rms and dbSPL), and 4 + for the frequency domain : FFT, MFCC, Signature and spectrum features.
+Imput is the signal array. The class optimizes the frequency domain steps, just one FFT operation is required, there is no dynamic memory after config and there are as little loops as possible so it is very fast.
 
- ### dBSPL
+### dBSPL
 
- Decibel sound Pressure Level measurements (dBSPL), commonly known as Sound decibels, only work if your samples are mvolts, and you know the sensitivity and gain of the micro (breakout). This is why the Sampler calibrates, without that dBSPL measurements are not possible.
- You can find the microphone sensitivity in the spec sheet of the microphone/ breakout board. The gain: level is the amplification introduced by the circuit between micrisphone and GPIO pin. For example the Max4466 has a potmeter to control gain, so the only way to find out what that level is, is by measuring DDB's and comparing to the actual DB with a sound meter on your mobile phone
- [this thread](https://forums.adafruit.com/viewtopic.php?f=8&p=570094)  explains how that all works but I'm afraid that it still requires some basic knowledge of signal processing to know what happens here.
+For Decibel sound Pressure Level measurements (dBSPL), commonly known as Sound decibels, you need samples in accurate mvolts and you need to know the sensitivity and gain of the input micro (breakout). This is why you need ESP32Sampler Which calibrates and returns an aray with mV vaues.
+You can find the microphone sensitivity in the spec sheet of the microphone/ breakout board. The gain level is the dB amplification introduced by the circuit between microphone and GPIO pin. For example the Max4466 has a potmeter to control gain, so the only way to find out what that level is, is by measuring DDB's and comparing to the actual DB with a sound meter on your mobile phone. [this thread](https://forums.adafruit.com/viewtopic.php?f=8&p=570094) explains how that works but I'm afraid that it still requires some basic knowledge of signal processing and what Decibels / dBSPL are to know why this works so easy.  
 
- To get the frequency domain features you first have to perform the FFT on the signal, then call the relevant functions to get what you need.
- Each function returns an array (pointer). 
- The features array returns all features. To know which feature you need there is an enum list that can be used as an index. there also is a list of tags, 'FeatureNames', the index is the const char *  with the name of the tag, usefull if you want to push features to Json
+To get the frequency domain features you first have to perform the FFT on the signal, then call the relevant functions to get what you need. Each function returns an array (pointer). 
+The getFeatures method returns spectrum features: peak frequency, peak magnitude, average magnitude, crest, spread, flatness, rolloff, kurtosis, skewness and centroid. To get a specific feature from the array there is an enum list that can be used as an index. There also is a list of tags, 'FeatureNames', the index is the const char *  with the name of the tag, usefull if you want to push features to Json or csv for feature analysis in python for ML.
+MFCC returns an array with the Mel Frequency Cepstral Coeffients, an extremely efficient feature for speech regocnition. getSignature returns a fingerprint array and hash with peak frequencies in a logarithmic set of frequency-bands, which is perfect for recognizing a specific sound or piece of music. The algorithm, which is similar to what Shazam does, is pretty usefull to classify / identify specific music / sound parts. See these posts (https://www.toptal.com/algorithms/shazam-it-music-processing-fingerprinting-and-recognition) and (https://www.royvanrijn.com/blog/2010/06/creating-shazam-in-java/) which describe how it works. The basics are published and common knowledge but the entire shazam algorithm is patented, just so you know. 
   
-  Size of the array are class members, so that you don't have to 'remember' those after config init
+The Sizes of the returned arrays are both config parameters and class members, so that you don't have to 'remember' those after config init
 
-  The fingerprint algorithm, which is similar to what Shazam does, is pretty usefull to classify / identify specific music / sound parts.  See these posts (https://www.toptal.com/algorithms/shazam-it-music-processing-fingerprinting-and-recognition) and (https://www.royvanrijn.com/blog/2010/06/creating-shazam-in-java/) that describe how it works. The basics are published and common knowledge but the entire shazam algorithm is patented, just so you know. 
-
-  The whole thing is very fast. Normally the FFT and features collection take no more than 20 msecs for 1024 samples. If you sample 1024 at reasonable frequencies suchas 8192 (44100 is not needed for sound recognition) that  gives you plenty time to do FFT and e.g MFCC, and pass the results on to the next task (on the other ESp32 core) via an RTOS queue. That's what I do and it works very well. 
+The whole thing is very fast. The combined FFT and features collection take no more than 20 msecs for 1024 samples. If you sample 1024 at reasonable frequencies such as 8192 (44100 is not needed for sound recognition) that gives you plenty time to do the FFT and e.g MFCC, and even do ML classification, Then pass the results on to the next task (on the other ESp32 core) via an RTOS queue for Web stuff. That's what I do and it works very well. 
 
  ## Example use
 
 ```c++
 /*
 
-  Example: collect samples from a connected Mic, process and print results
+Example: collect samples from a connected Mic, process and print results
 
 */
 
