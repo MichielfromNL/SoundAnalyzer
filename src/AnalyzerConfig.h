@@ -51,7 +51,7 @@ enum SpectrumFeature {
   ANALYZER_NUMFEATURES
 };
 
-#define FEATURENAMES    {"PeakFreq","PeakMag","AvgMag","Spread","Skewness","Centroid","Flatness""Crest","Kurtosis","Rolloff"}
+#define FEATURENAMES    {"PeakFreq","PeakMag","AvgMag","Spread","Skewness","Centroid","Flatness","Crest","Kurtosis","Rolloff"}
 
 // declared in the cpp file
 extern const char * FeatureNames[ANALYZER_NUMFEATURES];
